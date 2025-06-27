@@ -7,14 +7,22 @@ import { MistralLocalClientService } from './mistral-client.repository';
 // ✅ Hack pour importer correctement PDFParser depuis un module CommonJS
 const PDFParser = require('pdf2json');
 import { Buffer } from 'buffer';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class LocalPdfRepository implements PdfRepository {
   private pdfs = new Map<string, { buffer: Buffer; mimetype: string; size: number }>();
-
+  private readonly lambdaEndpointUrl: string;
   constructor(
-    private readonly aiClient: MistralLocalClientService
-  ) {}
+    private readonly aiClient: MistralLocalClientService,private readonly config: ConfigService
+  ) {
+
+const lambdaUrl = this.config.get<string>('LAMBDA_ENDPOINT_URL');
+if (!lambdaUrl) {
+  throw new Error('LAMBDA_ENDPOINT_URL is not defined in environment variables');
+}
+this.lambdaEndpointUrl = lambdaUrl;
+  }
 
   async saveFile(command: { originalName: string; buffer: Buffer; mimetype: string; size: number }): Promise<void> {
     const { originalName, buffer, mimetype, size } = command;
@@ -66,7 +74,7 @@ export class LocalPdfRepository implements PdfRepository {
       const excelFileName = originalName.replace(/\.pdf$/i, '.xlsx');
 
       await axios.post(
-        `https://0zxhhlp874.execute-api.eu-central-1.amazonaws.com/dev/upload/${excelFileName}`,
+        `${this.lambdaEndpointUrl}${excelFileName}`,
         { file: base64Excel },
         {
           headers: {

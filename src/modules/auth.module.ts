@@ -1,7 +1,7 @@
 // auth.module.ts
 import { Module } from '@nestjs/common';
 import { AuthController } from '../interfaces/controllers/auth.controller';
-import { AuthService } from '../infra/repositories/auth.service'; // ← ajuste le chemin si besoin
+import { AuthService } from '../infra/repositories/auth.repository'; // ← ajuste le chemin si besoin
 import { HttpModule } from '@nestjs/axios';
 
 @Module({
